@@ -5,6 +5,7 @@ BUILD_DIR := build
 TARGET := $(BUILD_DIR)/$(NAME)
 SRC := src/wordcount.c
 TESTS := $(wildcard test/*.txt)
+CHECKS := $(TESTS:.txt=.check)
 
 CFLAGS := -Wall -Wextra -DNAME=\"$(NAME)\" -DVERSION=\"$(VERSION)\"
 
@@ -16,11 +17,10 @@ $(TARGET): $(SRC) config.json
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
 
-check: $(TARGET)
-	@for test_file in $(TESTS); do \
-		expected_file="$${test_file%.txt}.expected"; \
-		$(TARGET) "$$test_file" | diff -u "$$expected_file" - || exit 1; \
-	done
+check: $(CHECKS)
+
+%.check: %.txt $(TARGET)
+	@$(TARGET) $< | diff -u $*.expected -
 
 clean:
 	rm -rf $(BUILD_DIR)
